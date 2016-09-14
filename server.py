@@ -1,14 +1,16 @@
-#  coding: utf-8 
-import SocketServer
+# coding: utf-8
 
-# Copyright 2013 Abram Hindle, Eddie Antonio Santos
-# 
+import SocketServer
+import os
+
+# Copyright 2013 Abram Hindle, Eddie Antonio Santos, Jiafeng Wu
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,12 +29,78 @@ import SocketServer
 # try: curl -v -X GET http://127.0.0.1:8080/
 
 
+
 class MyWebServer(SocketServer.BaseRequestHandler):
-    
+
     def handle(self):
         self.data = self.request.recv(1024).strip()
-        print ("Got a request of: %s\n" % self.data)
-        self.request.sendall("OK")
+        print "Got a request of: %s\n" % self.data
+
+        # split the request infomation into a list
+    	requestList = self.data.split()
+
+        # get the method
+    	requestMethod = requestList[0]
+        # get the path
+    	requestUrl = requestList[1]
+        # get the protocol
+        requestProtocol = requestList[2]
+
+        # get the absolute path of folder www
+        root_path = os.path.abspath("www")
+        #print root_path
+
+        # security check, parent of current directory
+    	if '../' in requestUrl:
+            self.request.sendall(str(requestProtocol)+" 404 Not Found\r\n\r\n")
+            self.request.sendall("404 ERROR - PAGE NOT FOUND")
+
+        # check path and get the absolute path of files
+        else:
+            #init the absolute path
+            abs_path = ""
+
+            #if the "/" at the end, update the absolute path by requestUrl add the index.html
+            if requestUrl[-1] == '/':
+                abs_path = root_path +"/index.html"
+            # else, update the absolute path by root path add the requestUrl
+            else:
+                abs_path = root_path + requestUrl
+            # if the requestMethod is GET, call function getMethod
+            if requestMethod.upper() == "GET":
+                self.getMethod(abs_path,requestProtocol)
+
+
+    def getMethod(self,abs_path,requestProtocol):
+        # if can open the absolute path, open file and send all the information
+    	try:
+            # open the file by the absolut path
+    	    f = open(abs_path)
+            # read the file
+    	    f_text = f.read()
+
+    	    self.request.sendall(str(requestProtocol)+" 200 OK\r\n")
+
+            # determine the mimetype of file
+            mime = ""
+            if abs_path.lower().endswith(".html"):
+                mime = "text/html"
+            elif abs_path.lower().endswith(".css"):
+                mime = "text/css"
+
+            self.request.sendall("Content-Type: "+str(mime)+"\r\n")
+            self.request.sendall("Content-Length: "+str(len(f_text))+"\r\n")
+    	    self.request.sendall('Connection: close' + "\r\n\r\n")
+
+    	    self.request.sendall(f_text + "\r\n")
+
+            # close the file
+            f.close()
+            
+        # if the absolute path is not exist, throw the 404 error
+    	except:
+    	    self.request.sendall(str(requestProtocol)+" 404 Not Found\r\n\r\n")
+    	    self.request.sendall("404 ERROR - PAGE NOT FOUND")
 
 if __name__ == "__main__":
     HOST, PORT = "localhost", 8080
