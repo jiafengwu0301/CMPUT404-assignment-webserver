@@ -48,7 +48,6 @@ class MyWebServer(SocketServer.BaseRequestHandler):
 
         # get the absolute path of folder www
         root_path = os.path.abspath("www")
-        #print root_path
 
         # security check, parent of current directory
     	if '../' in requestUrl:
@@ -60,12 +59,14 @@ class MyWebServer(SocketServer.BaseRequestHandler):
             #init the absolute path
             abs_path = ""
 
-            #if the "/" at the end, update the absolute path by requestUrl add the index.html
+            #if the "/" at the end, update the absolute path by adding root_path,requestUrl and index.html
             if requestUrl[-1] == '/':
-                abs_path = root_path +"/index.html"
-            # else, update the absolute path by root path add the requestUrl
+                abs_path = root_path + requestUrl + "/index.html"
+
+            # else, update the absolute path by adding root path and the requestUrl
             else:
                 abs_path = root_path + requestUrl
+
             # if the requestMethod is GET, call function getMethod
             if requestMethod.upper() == "GET":
                 self.getMethod(abs_path,requestProtocol)
@@ -79,24 +80,26 @@ class MyWebServer(SocketServer.BaseRequestHandler):
             # read the file
     	    f_text = f.read()
 
-    	    self.request.sendall(str(requestProtocol)+" 200 OK\r\n")
-
             # determine the mimetype of file
             mime = ""
             if abs_path.lower().endswith(".html"):
                 mime = "text/html"
+
             elif abs_path.lower().endswith(".css"):
                 mime = "text/css"
 
+            #send header
+            self.request.sendall(str(requestProtocol)+" 200 OK\r\n")
             self.request.sendall("Content-Type: "+str(mime)+"\r\n")
-            self.request.sendall("Content-Length: "+str(len(f_text))+"\r\n")
+            self.request.sendall("Content-Length: "+str(len(f_text))+"; charset = utf-8\r\n")
     	    self.request.sendall('Connection: close' + "\r\n\r\n")
 
+            #send data
     	    self.request.sendall(f_text + "\r\n")
 
             # close the file
             f.close()
-            
+
         # if the absolute path is not exist, throw the 404 error
     	except:
     	    self.request.sendall(str(requestProtocol)+" 404 Not Found\r\n\r\n")
