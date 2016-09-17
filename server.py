@@ -1,5 +1,4 @@
 # coding: utf-8
-
 import SocketServer
 import os
 
@@ -29,7 +28,6 @@ import os
 # try: curl -v -X GET http://127.0.0.1:8080/
 
 
-
 class MyWebServer(SocketServer.BaseRequestHandler):
 
     def handle(self):
@@ -49,17 +47,17 @@ class MyWebServer(SocketServer.BaseRequestHandler):
         # get the absolute path of folder www
         root_path = os.path.abspath("www")
 
-        # security check, parent of current directory
+        # security check, throw error if try to access parent directory of root directory
     	if '../' in requestUrl:
-            self.request.sendall(str(requestProtocol)+" 404 Not Found\r\n\r\n")
-            self.request.sendall("404 ERROR - PAGE NOT FOUND")
+            self.request.sendall(str(requestProtocol)+" 404 Not FOUND\r\n\r\n")
+            self.request.sendall("404 ERROR - - PAGE NOT FOUND")
 
         # check path and get the absolute path of files
         else:
-            #init the absolute path
+            # init the absolute path
             abs_path = ""
 
-            #if the "/" at the end, update the absolute path by adding root_path,requestUrl and index.html
+            # if the "/" at the end, update the absolute path by adding root_path,requestUrl and index.html
             if requestUrl[-1] == '/':
                 abs_path = root_path + requestUrl + "/index.html"
 
@@ -88,13 +86,13 @@ class MyWebServer(SocketServer.BaseRequestHandler):
             elif abs_path.lower().endswith(".css"):
                 mime = "text/css"
 
-            #send header
+            # send header
             self.request.sendall(str(requestProtocol)+" 200 OK\r\n")
             self.request.sendall("Content-Type: "+str(mime)+"\r\n")
             self.request.sendall("Content-Length: "+str(len(f_text))+"; charset = utf-8\r\n")
-    	    self.request.sendall('Connection: close' + "\r\n\r\n")
+    	    self.request.sendall("Connection: close" + "\r\n\r\n")
 
-            #send data
+            # send data
     	    self.request.sendall(f_text + "\r\n")
 
             # close the file
@@ -102,7 +100,7 @@ class MyWebServer(SocketServer.BaseRequestHandler):
 
         # if the absolute path is not exist, throw the 404 error
     	except:
-    	    self.request.sendall(str(requestProtocol)+" 404 Not Found\r\n\r\n")
+    	    self.request.sendall(str(requestProtocol)+" 404 Not FOUND\r\n\r\n")
     	    self.request.sendall("404 ERROR - PAGE NOT FOUND")
 
 if __name__ == "__main__":
