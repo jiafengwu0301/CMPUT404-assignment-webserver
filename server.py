@@ -88,8 +88,8 @@ class MyWebServer(SocketServer.BaseRequestHandler):
 
             # send header
             self.request.sendall(str(requestProtocol)+" 200 OK\r\n")
-            self.request.sendall("Content-Type: "+str(mime)+"\r\n")
-            self.request.sendall("Content-Length: "+str(len(f_text))+"; charset = utf-8\r\n")
+            self.request.sendall("Content-Type: "+str(mime)+"; charset=utf-8\r\n")
+            self.request.sendall("Content-Length: "+str(len(f_text))+"\r\n")
     	    self.request.sendall("Connection: close" + "\r\n\r\n")
 
             # send data
